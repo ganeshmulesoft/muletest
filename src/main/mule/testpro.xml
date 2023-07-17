@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="127a1a0a-427f-4fc4-b10f-ecf76b4844e7" file="local.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e772a7d2-8e0a-4674-8061-1738b149006a" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="471883cf-5259-449b-9e29-d81ef7ad9444" >
+		<db:my-sql-connection host="${secure.host}" port="${secure.port}" user="${secure.username}" password="${secure.password}" database="${secure.database}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="2b644443-a8b7-482f-80db-ebbb6ff912c8" file="secure.yaml" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="47ef388c-ab2c-4c83-b6dd-69bf45d8d8cb" />
+	<flow name="testproFlow" doc:id="1df98e94-59d0-4ed1-ac95-fb8fe52e96b7" >
+		<http:listener doc:name="Listener" doc:id="48d31248-89d4-4ba9-b602-fe0b5444c277" config-ref="HTTP_Listener_config" path="/testpro"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="59aba387-ce9a-454c-a6a9-6dc96bc6dad9" >
+			<route >
+				<db:insert doc:name="Insert" doc:id="0d051674-a733-496d-a71b-3b0b1df4bb89" config-ref="Database_Config" >
+					<db:sql ><![CDATA[INSERT INTO testcsv.testcsvtable (id, name, department) VALUES (:id, :name, :department);]]></db:sql>
+					<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+				</db:insert>
+			</route>
+			<route >
+				<file:write doc:name="Write" doc:id="3242e763-e6b9-4445-8cb9-9c74ffb19967" config-ref="File_Config" path="C:\files-connector\new\scatter.json"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="aed805d2-bea4-4b24-a14b-1e0e7ae7d279" message="hi"/>
+			</route>
+		</scatter-gather>
+	</flow>
+</mule>
